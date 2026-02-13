@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AIOS - Hierarquia de Squads</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&family=Sora:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+:root{--bg-body:#06080f;--bg-card:#0c1120;--bg-sidebar:#080c18;--bg-card-hover:#111830;--text-main:#8b95b0;--text-heading:#e8edf8;--text-muted:#4a5270;--accent:#00d4ff;--accent-glow:rgba(0,212,255,0.15);--accent2:#7c5cfc;--accent3:#ff6b6b;--accent4:#ffd93d;--accent5:#6bff9e;--border:#151d35;--border-bright:#1e2a4a;--tier-orch:#00d4ff;--tier-t0:#ffd93d;--tier-t1:#7c5cfc;--tier-t2:#ff6b6b;--radius:12px;--radius-sm:8px}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'Outfit',sans-serif;background:var(--bg-body);color:var(--text-main);line-height:1.7;display:flex;min-height:100vh}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(0,212,255,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(0,212,255,.03) 1px,transparent 1px);background-size:60px 60px;pointer-events:none;z-index:0}
+#sidebar{width:300px;min-width:300px;background:var(--bg-sidebar);border-right:1px solid var(--border);height:100vh;position:fixed;top:0;left:0;overflow-y:auto;display:flex;flex-direction:column;z-index:10}
+#sidebar::-webkit-scrollbar{width:4px}
+#sidebar::-webkit-scrollbar-track{background:transparent}
+#sidebar::-webkit-scrollbar-thumb{background:var(--border-bright);border-radius:4px}
+.sidebar-header{padding:2rem 1.5rem 1.5rem;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--bg-sidebar);z-index:2}
+.sidebar-logo{display:flex;align-items:center;gap:.75rem}
+.sidebar-logo .logo-icon{width:36px;height:36px;background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1rem;color:#fff;font-weight:800;font-family:'Sora',sans-serif;letter-spacing:-.05em;box-shadow:0 0 20px var(--accent-glow)}
+.sidebar-logo h1{font-family:'Sora',sans-serif;font-size:1rem;color:var(--text-heading);font-weight:700;letter-spacing:.08em;text-transform:uppercase}
+.sidebar-logo h1 span{color:var(--accent)}
+.sidebar-label{font-size:.65rem;text-transform:uppercase;letter-spacing:.15em;color:var(--text-muted);padding:1.5rem 1.5rem .5rem;font-weight:600}
+#toc{list-style:none;padding:.25rem .75rem 2rem}
+#toc li{margin-bottom:1px}
+#toc a{text-decoration:none;color:var(--text-muted);font-size:.82rem;display:flex;align-items:center;gap:.6rem;padding:.55rem .75rem;border-radius:var(--radius-sm);transition:all .2s;font-weight:400;position:relative}
+#toc a::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--border-bright);flex-shrink:0;transition:all .2s}
+#toc a:hover{background:rgba(0,212,255,.06);color:var(--text-heading)}
+#toc a:hover::before{background:var(--accent);box-shadow:0 0 8px var(--accent-glow)}
+#toc a.active{background:rgba(0,212,255,.08);color:var(--accent);font-weight:600}
+#toc a.active::before{background:var(--accent);box-shadow:0 0 10px var(--accent)}
+#toc .toc-h3{padding-left:2rem;font-size:.78rem}
+#toc .toc-h3::before{width:4px;height:4px}
+#main{margin-left:300px;padding:3rem 4rem 6rem;max-width:1100px;width:100%;position:relative;z-index:1}
+.section{opacity:0;transform:translateY(30px);transition:opacity .6s ease,transform .6s ease}
+.section.visible{opacity:1;transform:translateY(0)}
+.page-header{margin-bottom:4rem;padding-bottom:2rem;border-bottom:1px solid var(--border)}
+.page-header h1{font-family:'Sora',sans-serif;font-size:2.8rem;color:var(--text-heading);font-weight:800;letter-spacing:-.03em;line-height:1.15;margin-bottom:1rem}
+.page-header h1 .gradient-text{background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.page-header .meta{display:flex;gap:1.5rem;font-size:.82rem;color:var(--text-muted)}
+.page-header .meta span{display:flex;align-items:center;gap:.4rem}
+h2{font-family:'Sora',sans-serif;font-size:1.6rem;color:var(--text-heading);font-weight:700;margin:4rem 0 1.5rem;scroll-margin-top:2rem;display:flex;align-items:center;gap:.75rem}
+h2 .section-badge{font-size:.7rem;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;padding:.2rem .6rem;border-radius:20px;font-weight:600;letter-spacing:.05em}
+h3{font-size:1.15rem;color:var(--text-heading);font-weight:600;margin:2.5rem 0 1rem;scroll-margin-top:2rem}
+p{margin-bottom:1.2rem}
+hr{border:none;height:1px;background:var(--border);margin:3rem 0}
+blockquote{border-left:3px solid var(--accent);background:linear-gradient(135deg,rgba(0,212,255,.04),rgba(124,92,252,.04));padding:1.25rem 1.5rem;margin:1.5rem 0;border-radius:0 var(--radius) var(--radius) 0;font-size:.9rem;color:var(--text-muted)}
+.org-chart{display:flex;flex-direction:column;align-items:center;gap:0;padding:2rem 0}
+.org-master{background:linear-gradient(135deg,rgba(0,212,255,.12),rgba(124,92,252,.12));border:1.5px solid rgba(0,212,255,.35);border-radius:var(--radius);padding:1.25rem 2.5rem;text-align:center;box-shadow:0 0 40px rgba(0,212,255,.08)}
+.org-master .org-icon{font-size:1.5rem;margin-bottom:.25rem}
+.org-master .org-title{font-family:'Sora',sans-serif;font-size:1rem;font-weight:700;color:var(--text-heading)}
+.org-master .org-sub{font-family:'JetBrains Mono',monospace;font-size:.75rem;color:var(--accent)}
+.org-connector{width:2px;height:40px;background:linear-gradient(to bottom,var(--accent),var(--accent2));opacity:.4}
+.org-connector-h{width:100%;max-width:900px;height:2px;background:linear-gradient(to right,transparent,var(--accent),var(--accent2),var(--accent),transparent);opacity:.25}
+.org-branches{display:flex;justify-content:center;flex-wrap:wrap;max-width:960px}
+.org-branch{display:flex;flex-direction:column;align-items:center;width:130px}
+.org-branch-line{width:2px;height:28px;background:linear-gradient(to bottom,var(--accent2),transparent);opacity:.3}
+.org-node{background:var(--bg-card);border:1px solid var(--border-bright);border-radius:var(--radius-sm);padding:.8rem .5rem;text-align:center;transition:all .3s;cursor:default;width:120px}
+.org-node:hover{border-color:var(--accent);box-shadow:0 0 20px var(--accent-glow);transform:translateY(-3px)}
+.org-node .node-name{font-size:.75rem;font-weight:600;color:var(--text-heading);margin-bottom:.15rem}
+.org-node .node-id{font-family:'JetBrains Mono',monospace;font-size:.62rem;color:var(--text-muted)}
+.stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin:2rem 0}
+.stat-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:1.5rem;text-align:center;transition:all .3s}
+.stat-card:hover{border-color:var(--border-bright);transform:translateY(-2px)}
+.stat-value{font-family:'Sora',sans-serif;font-size:2.5rem;font-weight:800;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.stat-label{font-size:.8rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.08em;font-weight:600;margin-top:.25rem}
+.data-table{width:100%;border-collapse:separate;border-spacing:0;margin:2rem 0;border-radius:var(--radius);overflow:hidden;border:1px solid var(--border);font-size:.82rem}
+.data-table th{background:var(--bg-card);color:var(--text-heading);padding:.85rem 1rem;font-weight:600;text-align:center;border-bottom:1px solid var(--border);font-size:.75rem;text-transform:uppercase;letter-spacing:.05em}
+.data-table th:first-child{text-align:left}
+.data-table td{padding:.75rem 1rem;border-bottom:1px solid var(--border);text-align:center;font-family:'JetBrains Mono',monospace;font-size:.8rem}
+.data-table td:first-child{text-align:left;font-family:'Outfit',sans-serif;color:var(--text-heading);font-weight:500}
+.data-table tr:last-child td{border-bottom:none}
+.data-table tr:hover td{background:rgba(0,212,255,.03)}
+.data-table .total-col{color:var(--accent);font-weight:600}
+.squad-header{display:flex;align-items:center;gap:1rem;margin-bottom:1.5rem;padding:1.5rem;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius)}
+.squad-icon{width:56px;height:56px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:1.5rem;flex-shrink:0}
+.squad-meta{flex:1}
+.squad-meta h3{margin:0;font-family:'Sora',sans-serif;font-size:.85rem;font-weight:600;color:var(--text-heading)}
+.squad-meta .squad-path{font-family:'JetBrains Mono',monospace;font-size:.72rem;color:var(--text-muted);margin-top:.15rem}
+.squad-badges{display:flex;gap:.4rem;margin-top:.4rem}
+.badge{font-size:.62rem;padding:.15rem .5rem;border-radius:20px;font-weight:600;letter-spacing:.05em;text-transform:uppercase}
+.badge-tested{background:rgba(107,255,158,.1);color:var(--accent5);border:1px solid rgba(107,255,158,.25)}
+.badge-version{background:rgba(0,212,255,.08);color:var(--accent);border:1px solid rgba(0,212,255,.2)}
+.squad-stats{display:flex;gap:1.5rem;margin-left:auto}
+.squad-stat{text-align:center}
+.squad-stat-val{font-family:'Sora',sans-serif;font-weight:700;font-size:1.15rem;color:var(--text-heading)}
+.squad-stat-lbl{font-size:.6rem;text-transform:uppercase;letter-spacing:.1em;color:var(--text-muted)}
+.tier-group{margin-bottom:.75rem}
+.tier-label{font-size:.68rem;text-transform:uppercase;letter-spacing:.12em;font-weight:700;margin-bottom:.5rem;display:flex;align-items:center;gap:.5rem}
+.tier-label::after{content:'';flex:1;height:1px;background:var(--border)}
+.tier-label.tier-orch{color:var(--tier-orch)}
+.tier-label.tier-t0{color:var(--tier-t0)}
+.tier-label.tier-t1{color:var(--tier-t1)}
+.tier-label.tier-t2{color:var(--tier-t2)}
+.agents-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:.75rem}
+.agent-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:1rem 1.25rem;transition:all .3s;position:relative;overflow:hidden}
+.agent-card::before{content:'';position:absolute;top:0;left:0;width:3px;height:100%;border-radius:3px 0 0 3px}
+.agent-card.tier-orch::before{background:var(--tier-orch)}
+.agent-card.tier-t0::before{background:var(--tier-t0)}
+.agent-card.tier-t1::before{background:var(--tier-t1)}
+.agent-card.tier-t2::before{background:var(--tier-t2)}
+.agent-card:hover{border-color:var(--border-bright);background:var(--bg-card-hover);transform:translateY(-2px);box-shadow:0 8px 30px rgba(0,0,0,.3)}
+.agent-top{display:flex;align-items:center;gap:.75rem;margin-bottom:.6rem}
+.agent-avatar{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:.8rem;font-weight:700;flex-shrink:0;color:#fff}
+.agent-card.tier-orch .agent-avatar{background:linear-gradient(135deg,#00d4ff33,#00d4ff15);color:var(--tier-orch);border:1px solid rgba(0,212,255,.2)}
+.agent-card.tier-t0 .agent-avatar{background:linear-gradient(135deg,#ffd93d33,#ffd93d15);color:var(--tier-t0);border:1px solid rgba(255,217,61,.2)}
+.agent-card.tier-t1 .agent-avatar{background:linear-gradient(135deg,#7c5cfc33,#7c5cfc15);color:var(--tier-t1);border:1px solid rgba(124,92,252,.2)}
+.agent-card.tier-t2 .agent-avatar{background:linear-gradient(135deg,#ff6b6b33,#ff6b6b15);color:var(--tier-t2);border:1px solid rgba(255,107,107,.2)}
+.agent-name{font-family:'JetBrains Mono',monospace;font-size:.82rem;font-weight:600;color:var(--text-heading)}
+.agent-role{font-size:.72rem;color:var(--text-muted)}
+.agent-frameworks{display:flex;flex-wrap:wrap;gap:.35rem;margin-top:.5rem}
+.framework-tag{font-size:.62rem;padding:.15rem .5rem;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:20px;color:var(--text-muted);transition:all .2s}
+.agent-card:hover .framework-tag{border-color:var(--border-bright)}
+.agent-commands{margin-top:.5rem;font-family:'JetBrains Mono',monospace;font-size:.65rem;color:var(--text-muted)}
+.agent-commands code{color:var(--accent);background:rgba(0,212,255,.06);padding:.1rem .35rem;border-radius:4px;margin-right:.25rem}
+.workflow-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:1.25rem;margin-bottom:.75rem;transition:all .3s}
+.workflow-card:hover{border-color:var(--border-bright)}
+.workflow-name{font-family:'JetBrains Mono',monospace;font-size:.82rem;font-weight:600;color:var(--accent);margin-bottom:.75rem}
+.workflow-flow{display:flex;align-items:center;flex-wrap:wrap;gap:.15rem}
+.wf-node{background:rgba(255,255,255,.04);border:1px solid var(--border-bright);border-radius:8px;padding:.4rem .75rem;font-family:'JetBrains Mono',monospace;font-size:.7rem;color:var(--text-heading);white-space:nowrap;transition:all .2s}
+.wf-node:hover{border-color:var(--accent);background:rgba(0,212,255,.06)}
+.wf-arrow{color:var(--text-muted);font-size:.75rem;padding:0 .4rem;opacity:.5}
+.tasks-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:.5rem;margin:1rem 0}
+.task-item{display:flex;align-items:center;gap:.6rem;padding:.6rem .85rem;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-sm);font-size:.78rem;transition:all .2s}
+.task-item:hover{border-color:var(--border-bright);background:var(--bg-card-hover)}
+.task-dot{width:5px;height:5px;border-radius:50%;background:var(--accent);flex-shrink:0}
+.task-name{font-family:'JetBrains Mono',monospace;font-size:.72rem;color:var(--text-heading);flex:1}
+.task-agent{font-size:.65rem;color:var(--text-muted)}
+.tier-map{display:flex;flex-direction:column;gap:.75rem;margin:1.5rem 0}
+.tier-map-row{display:flex;align-items:flex-start;gap:1rem}
+.tier-map-label{min-width:100px;font-family:'Sora',sans-serif;font-size:.75rem;font-weight:700;padding-top:.5rem}
+.tier-map-agents{display:flex;flex-wrap:wrap;gap:.35rem;flex:1}
+.tier-map-tag{font-family:'JetBrains Mono',monospace;font-size:.68rem;padding:.35rem .65rem;background:var(--bg-card);border:1px solid var(--border);border-radius:6px;color:var(--text-main);transition:all .2s}
+.tier-map-tag:hover{border-color:var(--border-bright);transform:translateY(-1px)}
+.summary-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:.75rem;margin:2rem 0}
+.summary-item{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:1.25rem;display:flex;align-items:center;gap:1rem}
+.summary-item .si-val{font-family:'Sora',sans-serif;font-size:1.6rem;font-weight:800;color:var(--text-heading)}
+.summary-item .si-lbl{font-size:.75rem;color:var(--text-muted);line-height:1.3}
+.page-footer{margin-top:5rem;padding-top:2rem;border-top:1px solid var(--border);text-align:center;color:var(--text-muted);font-size:.78rem}
+.page-footer em{font-style:normal;opacity:.6}
+@media(max-width:900px){#sidebar{display:none}#main{margin-left:0;padding:1.5rem}.page-header h1{font-size:2rem}.org-branches{gap:.25rem}.org-branch{width:100px}.org-node{width:95px;padding:.6rem .3rem}.org-node .node-name{font-size:.65rem}.squad-header{flex-direction:column;text-align:center}.squad-stats{margin-left:0}.agents-row{grid-template-columns:1fr}}
+@media(max-width:600px){.stats-grid{grid-template-columns:1fr}.summary-grid{grid-template-columns:1fr}}
+    </style>
+</head>
+<body>
+<nav id="sidebar">
+    <div class="sidebar-header"><div class="sidebar-logo"><div class="logo-icon">A</div><h1>AIOS</h1></div></div>
+    <div class="sidebar-label">Navegação</div>
+    <ul id="toc"></ul>
+</nav>
+<main id="main">
+
+    <header class="page-header section">
+        <h1>Hierarquia Completa dos<br><span class="gradient-text">Squads — AIOS</span></h1>
+        <div class="meta"><span>📅 2026-02-13</span><span>🏷️ v1.0.0</span></div>
+    </header>
+
+    <section class="section" id="s-visao-geral">
+        <h2>Visão Geral <span class="section-badge">OVERVIEW</span></h2>
+        <div class="org-chart">
+            <div class="org-master"><div class="org-icon">👑</div><div class="org-title">MASTER ORCHESTRATOR</div><div class="org-sub">master-chief</div></div>
+            <div class="org-connector"></div>
+            <div class="org-connector-h"></div>
+            <div class="org-branches">
+                <div class="org-branch"><div class="org-branch-line"></div><div class="org-node"><div class="node-name">✍️ Copywriting</div><div class="node-id">copy-chief</div></div></div>
+                <div class="org-branch"><div class="org-branch-line"></div><div class="org-node"><div class="node-name">📈 Marketing</div><div class="node-id">marketing-chief</div></div></div>
+                <div class="org-branch"><div class="org-branch-line"></div><div class="org-node"><div class="node-name">💻 Programação</div><div class="node-id">dev-chief</div></div></div>
+                <div class="org-branch"><div class="org-branch-line"></div><div class="org-node"><div class="node-name">💰 Finanças</div><div class="node-id">finance-chief</div></div></div>
+                <div class="org-branch"><div class="org-branch-line"></div><div class="org-node"><div class="node-name">⚡ Produtividade</div><div class="node-id">productivity-chief</div></div></div>
+                <div class="org-branch"><div class="org-branch-line"></div><div class="org-node"><div class="node-name">🤖 IA/Auto</div><div class="node-id">ia-chief</div></div></div>
+                <div class="org-branch"><div class="org-branch-line"></div><div class="org-node"><div class="node-name">🤝 Vendas</div><div class="node-id">sales-chief</div></div></div>
+            </div>
+        </div>
+    </section>
+
+    <section class="section" id="s-totais">
+        <h2>Totais <span class="section-badge">STATS</span></h2>
+        <div class="stats-grid">
+            <div class="stat-card"><div class="stat-value">39</div><div class="stat-label">Agents</div></div>
+            <div class="stat-card"><div class="stat-value">76</div><div class="stat-label">Tasks</div></div>
+            <div class="stat-card"><div class="stat-value">28</div><div class="stat-label">Workflows</div></div>
+        </div>
+        <div style="overflow-x:auto">
+        <table class="data-table">
+            <thead><tr><th>Recurso</th><th>Creator</th><th>Copy</th><th>Mktg</th><th>Dev</th><th>Finance</th><th>Produt.</th><th>IA</th><th>Sales</th><th>Master</th><th>Total</th></tr></thead>
+            <tbody>
+                <tr><td>Agents</td><td>3</td><td>6</td><td>6</td><td>4</td><td>4</td><td>5</td><td>4</td><td>5</td><td>1</td><td class="total-col">39</td></tr>
+                <tr><td>Tasks</td><td>42</td><td>6</td><td>5</td><td>5</td><td>4</td><td>5</td><td>4</td><td>5</td><td>0</td><td class="total-col">76</td></tr>
+                <tr><td>Workflows</td><td>9</td><td>3</td><td>3</td><td>3</td><td>2</td><td>2</td><td>3</td><td>3</td><td>0</td><td class="total-col">28</td></tr>
+            </tbody>
+        </table>
+        </div>
+    </section>
+    <hr>
+
+    <!-- 1. MASTER -->
+    <section class="section" id="s-master">
+        <h2>1. Master Orchestrator</h2>
+        <div class="squad-header">
+            <div class="squad-icon" style="background:linear-gradient(135deg,#00d4ff22,#7c5cfc22);border:1px solid rgba(0,212,255,.2)">👑</div>
+            <div class="squad-meta"><h3>master-orchestrator/</h3><div class="squad-path">entry_agent: master-chief | slashPrefix: master</div></div>
+        </div>
+        <p>Orquestra todos os 7 squads de domínio. Workflows pré-definidos:</p>
+        <div class="workflow-section">
+            <div class="workflow-card"><div class="workflow-name">🚀 Launch Produto</div><div class="workflow-flow"><span class="wf-node">✍️ copywriting</span><span class="wf-arrow">→</span><span class="wf-node">📈 marketing</span><span class="wf-arrow">→</span><span class="wf-node">🤝 vendas</span></div></div>
+            <div class="workflow-card"><div class="workflow-name">🏗️ SaaS Build</div><div class="workflow-flow"><span class="wf-node">💻 programação</span><span class="wf-arrow">→</span><span class="wf-node">🤖 ia-automação</span><span class="wf-arrow">→</span><span class="wf-node">⚡ produtividade</span></div></div>
+            <div class="workflow-card"><div class="workflow-name">📊 Growth Engine</div><div class="workflow-flow"><span class="wf-node">📈 marketing</span><span class="wf-arrow">→</span><span class="wf-node">🤝 vendas</span><span class="wf-arrow">→</span><span class="wf-node">✍️ copywriting</span></div></div>
+            <div class="workflow-card"><div class="workflow-name">🌐 Full Business</div><div class="workflow-flow"><span class="wf-node" style="border-color:var(--accent);color:var(--accent)">ALL SQUADS</span></div></div>
+        </div>
+    </section>
+    <hr>
+    <!-- 2. SQUAD CREATOR -->
+    <section class="section" id="s-creator">
+        <h2>2. Squad Creator <span class="section-badge">META-SQUAD</span></h2>
+        <div class="squad-header">
+            <div class="squad-icon" style="background:linear-gradient(135deg,#7c5cfc22,#ff6b6b22);border:1px solid rgba(124,92,252,.2)">🧬</div>
+            <div class="squad-meta"><h3>squad-creator/ v3.0.0</h3><div class="squad-path">entry_agent: squad-chief | slashPrefix: squadCreator</div><div class="squad-badges"><span class="badge badge-tested">✓ TESTED</span><span class="badge badge-version">v3.0.0</span></div></div>
+            <div class="squad-stats"><div class="squad-stat"><div class="squad-stat-val">3</div><div class="squad-stat-lbl">Agents</div></div><div class="squad-stat"><div class="squad-stat-val">42</div><div class="squad-stat-lbl">Tasks</div></div><div class="squad-stat"><div class="squad-stat-val">9</div><div class="squad-stat-lbl">Workflows</div></div></div>
+        </div>
+        <div class="agents-grid">
+            <div class="tier-group"><div class="tier-label tier-orch">Orchestrator</div><div class="agents-row"><div class="agent-card tier-orch"><div class="agent-top"><div class="agent-avatar">SC</div><div><div class="agent-name">squad-chief</div><div class="agent-role">Triage, routing, criação</div></div></div></div></div></div>
+            <div class="tier-group"><div class="tier-label tier-t1">Tier 1 — Specialists</div><div class="agents-row">
+                <div class="agent-card tier-t1"><div class="agent-top"><div class="agent-avatar">AN</div><div><div class="agent-name">oalanicolas</div><div class="agent-role">Mind cloning, DNA extraction</div></div></div><div class="agent-frameworks"><span class="framework-tag">Mind Cloning</span><span class="framework-tag">DNA Extraction</span><span class="framework-tag">46 Checkpoints</span></div></div>
+                <div class="agent-card tier-t1"><div class="agent-top"><div class="agent-avatar">PV</div><div><div class="agent-name">pedro-valerio</div><div class="agent-role">Process design, veto conditions</div></div></div><div class="agent-frameworks"><span class="framework-tag">Process Design</span><span class="framework-tag">Veto Conditions</span><span class="framework-tag">Workflow Validation</span></div></div>
+            </div></div>
+        </div>
+        <h3>Workflows</h3>
+        <div class="workflow-section">
+            <div class="workflow-card"><div class="workflow-name">wf-clone-mind</div><div class="workflow-flow"><span class="wf-node">squad-chief</span><span class="wf-arrow">→</span><span class="wf-node">oalanicolas</span><span class="wf-arrow">→</span><span class="wf-node">pedro-valerio</span></div></div>
+            <div class="workflow-card"><div class="workflow-name">wf-create-squad</div><div class="workflow-flow"><span class="wf-node">squad-chief</span><span class="wf-arrow">→</span><span class="wf-node">oalanicolas</span><span class="wf-arrow">→</span><span class="wf-node">pedro-valerio</span></div></div>
+            <div class="workflow-card"><div class="workflow-name">wf-extraction-pipeline</div><div class="workflow-flow"><span class="wf-node">squad-chief</span><span class="wf-arrow">→</span><span class="wf-node">oalanicolas</span><span class="wf-arrow">→</span><span class="wf-node">pedro-valerio</span></div></div>
+        </div>
+    </section>
+    <hr>
+
+    <!-- 3. COPYWRITING -->
+    <section class="section" id="s-copywriting">
+        <h2>3. Copywriting Squad</h2>
+        <div class="squad-header">
+            <div class="squad-icon" style="background:linear-gradient(135deg,#ff6b6b22,#ffd93d22);border:1px solid rgba(255,107,107,.2)">✍️</div>
+            <div class="squad-meta"><h3>copywriting/ v1.0.0</h3><div class="squad-path">entry_agent: copy-chief | slashPrefix: copy</div><div class="squad-badges"><span class="badge badge-tested">✓ TESTED</span><span class="badge badge-version">v1.0.0</span></div></div>
+            <div class="squad-stats"><div class="squad-stat"><div class="squad-stat-val">6</div><div class="squad-stat-lbl">Agents</div></div><div class="squad-stat"><div class="squad-stat-val">6</div><div class="squad-stat-lbl">Tasks</div></div><div class="squad-stat"><div class="squad-stat-val">3</div><div class="squad-stat-lbl">Workflows</div></div></div>
+        </div>
+        <div class="agents-grid">
+            <div class="tier-group"><div class="tier-label tier-orch">Orchestrator</div><div class="agents-row"><div class="agent-card tier-orch"><div class="agent-top"><div class="agent-avatar">CC</div><div><div class="agent-name">copy-chief</div><div class="agent-role">Triage, routing, criação</div></div></div></div></div></div>
+            <div class="tier-group"><div class="tier-label tier-t0">Tier 0 — Diagnostic</div><div class="agents-row">
+                <div class="agent-card tier-t0"><div class="agent-top"><div class="agent-avatar">ES</div><div><div class="agent-name">eugene-schwartz</div><div class="agent-role">Diagnóstico, Market Awareness</div></div></div><div class="agent-frameworks"><span class="framework-tag">5 Levels of Awareness</span><span class="framework-tag">5 Levels of Sophistication</span><span class="framework-tag">Breakthrough Advertising</span></div><div class="agent-commands"><code>*diagnose</code> <code>*awareness</code> <code>*sophistication</code></div></div>
+            </div></div>
+            <div class="tier-group"><div class="tier-label tier-t1">Tier 1 — Execution</div><div class="agents-row">
+                <div class="agent-card tier-t1"><div class="agent-top"><div class="agent-avatar">GH</div><div><div class="agent-name">gary-halbert</div><div class="agent-role">Direct Response Master</div></div></div><div class="agent-frameworks"><span class="framework-tag">A-Pile/B-Pile</span><span class="framework-tag">Swipe File System</span><span class="framework-tag">Boron Letters</span></div><div class="agent-commands"><code>*write</code> <code>*swipe</code> <code>*hook</code></div></div>
+                <div class="agent-card tier-t1"><div class="agent-top"><div class="agent-avatar">DO</div><div><div class="agent-name">david-ogilvy</div><div class="agent-role">Brand Copywriting</div></div></div><div class="agent-frameworks"><span class="framework-tag">Big Idea</span><span class="framework-tag">Headlines</span><span class="framework-tag">Research-First</span></div><div class="agent-commands"><code>*brand</code> <code>*headline</code> <code>*research</code></div></div>
+                <div class="agent-card tier-t1"><div class="agent-top"><div class="agent-avatar">SG</div><div><div class="agent-name">stefan-georgi</div><div class="agent-role">Modern Sales Copy</div></div></div><div class="agent-frameworks"><span class="framework-tag">RMBC Method</span><span class="framework-tag">Mechanism Discovery</span><span class="framework-tag">Big Idea Mining</span></div><div class="agent-commands"><code>*sales</code> <code>*mechanism</code> <code>*vsl</code></div></div>
+            </div></div>
+            <div class="tier-group"><div class="tier-label tier-t2">Tier 2 — Foundations</div><div class="agents-row">
+                <div class="agent-card tier-t2"><div class="agent-top"><div class="agent-avatar">CH</div><div><div class="agent-name">claude-hopkins</div><div class="agent-role">Scientific Advertising</div></div></div><div class="agent-frameworks"><span class="framework-tag">Scientific Advertising</span><span class="framework-tag">Testing Framework</span><span class="framework-tag">Reason-Why Copy</span></div><div class="agent-commands"><code>*test</code> <code>*reason-why</code> <code>*science</code></div></div>
+            </div></div>
+        </div>
+        <h3>Tasks</h3>
+        <div class="tasks-grid">
+            <div class="task-item"><span class="task-dot"></span><span class="task-name">route-request</span><span class="task-agent">copy-chief</span></div>
+            <div class="task-item"><span class="task-dot"></span><span class="task-name">diagnose-market</span><span class="task-agent">eugene-schwartz</span></div>
+            <div class="task-item"><span class="task-dot"></span><span class="task-name">write-sales-page</span><span class="task-agent">stefan-georgi</span></div>
+            <div class="task-item"><span class="task-dot"></span><span class="task-name">write-email-sequence</span><span class="task-agent">gary-halbert</span></div>
+            <div class="task-item"><span class="task-dot"></span><span class="task-name">create-headline</span><span class="task-agent">david-ogilvy</span></div>
+            <div class="task-item"><span class="task-dot"></span><span class="task-name">scientific-test</span><span class="task-agent">claude-hopkins</span></div>
+        </div>
+        <h3>Workflows</h3>
+        <div class="workflow-section">
+            <div class="workflow-card"><div class="workflow-name">wf-sales-page</div><div class="workflow-flow"><span class="wf-node">copy-chief</span><span class="wf-arrow">→</span><span class="wf-node">eugene-schwartz</span><span class="wf-arrow">→</span><span class="wf-node">stefan-georgi</span><span class="wf-arrow">→</span><span class="wf-node">claude-hopkins</span></div></div>
+            <div class="workflow-card"><div class="workflow-name">wf-email-sequence</div><div class="workflow-flow"><span class="wf-node">copy-chief</span><span class="wf-arrow">→</span><span class="wf-node">eugene-schwartz</span><span class="wf-arrow">→</span><span class="wf-node">gary-halbert</span><span class="wf-arrow">→</span><span class="wf-node">claude-hopkins</span></div></div>
+            <div class="workflow-card"><div class="workflow-name">wf-brand-copy</div><div class="workflow-flow"><span class="wf-node">copy-chief</span><span class="wf-arrow">→</span><span class="wf-node">eugene-schwartz</span><span class="wf-arrow">→</span><span class="wf-node">david-ogilvy</span><span class="wf-arrow">→</span><span class="wf-node">claude-hopkins</span></div></div>
+        </div>
+    </section>
+    <hr>
+    <!-- 4. MARKETING -->
+    <section class="section" id="s-marketing">
+        <h2>4. Marketing Digital Squad</h2>
+        <div class="squad-header">
+            <div class="squad-icon" style="background:linear-gradient(135deg,#6bff9e22,#00d4ff22);border:1px solid rgba(107,255,158,.2)">📈</div>
+            <div class="squad-meta"><h3>marketing-digital/ v1.0.0</h3><div class="squad-path">entry_agent: marketing-chief | slashPrefix: marketing</div><div class="squad-badges"><span class="badge badge-tested">✓ TESTED</span><span class="badge badge-version">v1.0.0</span></div></div>
+            <div class="squad-stats"><div class="squad-stat"><div class="squad-stat-val">6</div><div class="squad-stat-lbl">Agents</div></div><div class="squad-stat"><div class="squad-stat-val">5</div><div class="squad-stat-lbl">Tasks</div></div><div class="squad-stat"><div class="squad-stat-val">3</div><div class="squad-stat-lbl">Workflows</div></div></div>
+        </div>
+        <div class="agents-grid">
+            <div class="tier-group"><div class="tier-label tier-orch">Orchestrator</div><div class="agents-row"><div class="agent-card tier-orch"><div class="agent-top"><div class="agent-avatar">MC</div><div><div class="agent-name">marketing-chief</div><div class="agent-role">Triage, routing, estratégia</div></div></div></div></div></div>
+            <div class="tier-group"><div class="tier-label tier-t0">Tier 0 — Diagnostic</div><div class="agents-row">
+                <div class="agent-card tier-t0"><div class="agent-top"><div class="agent-avatar">SG</div><div><div class="agent-name">seth-godin</div><div class="agent-role">Estratégia e Posicionamento</div></div></div><div class="agent-frameworks"><span class="framework-tag">Purple Cow</span><span class="framework-tag">Permission Marketing</span><span class="framework-tag">Tribes</span></div><div class="agent-commands"><code>*strategy</code> <code>*positioning</code> <code>*tribe</code></div></div>
+            </div></div>
+            <div class="tier-group"><div class="tier-label tier-t1">Tier 1 — Execution</div><div class="agents-row">
+                <div class="agent-card tier-t1"><div class="agent-top"><div class="agent-avatar">GV</div><div><div class="agent-name">gary-vee</div><div class="agent-role">Social Media e Conteúdo</div></div></div><div class="agent-frameworks"><span class="framework-tag">Jab Jab Right Hook</span><span class="framework-tag">Document Don't Create</span><span class="framework-tag">Day Trading Attention</span></div><div class="agent-commands"><code>*content</code> <code>*social</code> <code>*attention</code></div></div>
+                <div class="agent-card tier-t1"><div class="agent-top"><div class="agent-avatar">RB</div><div><div class="agent-name">russell-brunson</div><div class="agent-role">Funnels e Conversão</div></div></div><div class="agent-frameworks"><span class="framework-tag">Value Ladder</span><span class="framework-tag">Attractive Character</span><span class="framework-tag">Secret Formula</span></div><div class="agent-commands"><code>*funnel</code> <code>*value-ladder</code> <code>*webinar</code></div></div>
+                <div class="agent-card tier-t1"><div class="agent-top"><div class="agent-avatar">NP</div><div><div class="agent-name">neil-patel</div><div class="agent-role">SEO e Growth</div></div></div><div class="agent-frameworks"><span class="framework-tag">Content Marketing</span><span class="framework-tag">SEO Fundamentals</span><span class="framework-tag">Growth Hacking</span></div><div class="agent-commands"><code>*seo</code> <code>*growth</code> <code>*analytics</code></div></div>
+            </div></div>
+            <div class="tier-group"><div class="tier-label tier-t2">Tier 2 — Advanced</div><div class="agents-row">
+                <div class="agent-card tier-t2"><div class="agent-top"><div class="agent-avatar">RD</div><div><div class="agent-name">ryan-deiss</div><div class="agent-role">Customer Value Journey</div></div></div><div class="agent-frameworks"><span class="framework-tag">CVJ (8 stages)</span><span class="framework-tag">Traffic Temperature</span><span class="framework-tag">Digital Marketing Canvas</span></div><div class="agent-commands"><code>*journey</code> <code>*traffic</code> <code>*canvas</code></div></div>
+            </div></div>
+        </div>
+        <h3>Workflows</h3>
+        <div class="workflow-section">
+            <div class="workflow-card"><div class="workflow-name">wf-launch-campaign</div><div class="workflow-flow"><span class="wf-node">marketing-chief</span><span class="wf-arrow">→</span><span class="wf-node">seth-godin</span><span class="wf-arrow">→</span><span class="wf-node">russell-brunson</span><span class="wf-arrow">→</span><span class="wf-node">gary-vee</span><span class="wf-arrow">→</span><span class="wf-node">neil-patel</span></div></div>
+            <div class="workflow-card"><div class="workflow-name">wf-content-strategy</div><div class="workflow-flow"><span class="wf-node">marketing-chief</span><span class="wf-arrow">→</span><span class="wf-node">seth-godin</span><span class="wf-arrow">→</span><span class="wf-node">gary-vee</span><span class="wf-arrow">→</span><span class="wf-node">neil-patel</span></div></div>
+            <div class="workflow-card"><div class="workflow-name">wf-funnel-build</div><div class="workflow-flow"><span class="wf-node">marketing-chief</span><span class="wf-arrow">→</span><span class="wf-node">seth-godin</span><span class="wf-arrow">→</span><span class="wf-node">russell-brunson</span><span class="wf-arrow">→</span><span class="wf-node">ryan-deiss</span><span class="wf-arrow">→</span><span class="wf-node">neil-patel</span></div></div>
+        </div>
+    </section>
+    <hr>
+
+    <!-- 5. PROGRAMAÇÃO -->
+    <section class="section" id="s-programacao">
+        <h2>5. Programação Squad</h2>
+        <div class="squad-header">
+            <div class="squad-icon" style="background:linear-gradient(135deg,#00d4ff22,#7c5cfc22);border:1px solid rgba(0,212,255,.2)">💻</div>
+            <div class="squad-meta"><h3>programacao/ v1.0.0</h3><div class="squad-path">entry_agent: dev-chief | slashPrefix: dev</div><div class="squad-badges"><span class="badge badge-tested">✓ TESTED</span><span class="badge badge-version">v1.0.0</span></div></div>
+            <div class="squad-stats"><div class="squad-stat"><div class="squad-stat-val">4</div><div class="squad-stat-lbl">Agents</div></div><div class="squad-stat"><div class="squad-stat-val">5</div><div class="squad-stat-lbl">Tasks</div></div><div class="squad-stat"><div class="squad-stat-val">3</div><div class="squad-stat-lbl">Workflows</div></div></div>
+        </div>
+        <div class="agents-grid">
+            <div class="tier-group"><div class="tier-label tier-orch">Orchestrator</div><div class="agents-row"><div class="agent-card tier-orch"><div class="agent-top"><div class="agent-avatar">DC</div><div><div class="agent-name">dev-chief</div><div class="agent-role">Triage, routing, code review</div></div></div></div></div></div>
+            <div class="tier-group"><div class="tier-label tier-t0">Tier 0 — Diagnostic</div><div class="agents-row">
+                <div class="agent-card tier-t0"><div class="agent-top"><div class="agent-avatar">UB</div><div><div class="agent-name">uncle-bob</div><div class="agent-role">Clean Code e SOLID</div></div></div><div class="agent-frameworks"><span class="framework-tag">Clean Code</span><span class="framework-tag">SOLID</span><span class="framework-tag">Clean Architecture</span></div><div class="agent-commands"><code>*clean</code> <code>*solid</code> <code>*review</code></div></div>
+            </div></div>
+            <div class="tier-group"><div class="tier-label tier-t1">Tier 1 — Execution</div><div class="agents-row">
+                <div class="agent-card tier-t1"><div class="agent-top"><div class="agent-avatar">MF</div><div><div class="agent-name">martin-fowler</div><div class="agent-role">Refactoring e Patterns</div></div></div><div class="agent-frameworks"><span class="framework-tag">Refactoring Catalog</span><span class="framework-tag">Enterprise Patterns</span><span class="framework-tag">Code Smells</span></div><div class="agent-commands"><code>*refactor</code> <code>*smell</code> <code>*pattern</code></div></div>
+                <div class="agent-card tier-t1"><div class="agent-top"><div class="agent-avatar">KB</div><div><div class="agent-name">kent-beck</div><div class="agent-role">TDD e XP</div></div></div><div class="agent-frameworks"><span class="framework-tag">TDD</span><span class="framework-tag">Extreme Programming</span><span class="framework-tag">Simple Design</span></div><div class="agent-commands"><code>*tdd</code> <code>*test</code> <code>*xp</code></div></div>
+                <div class="agent-card tier-t1"><div class="agent-top"><div class="agent-avatar">DH</div><div><div class="agent-name">dhh</div><div class="agent-role">Pragmatismo e Produtividade</div></div></div><div class="agent-frameworks"><span class="framework-tag">Convention over Config</span><span class="framework-tag">Majestic Monolith</span><span class="framework-tag">Shape Up</span></div><div class="agent-commands"><code>*pragmatic</code> <code>*ship</code> <code>*simple</code></div></div>
+            </div></div>
+        </div>
+        <h3>Workflows</h3>
+        <div class="workflow-section">
+            <div class="workflow-card"><div class="workflow-name">wf-code-review</div><div class="workflow-flow"><span class="wf-node">dev-chief</span><span class="wf-arrow">→</span><span class="wf-node">uncle-bob</span><span class="wf-arrow">→</span><span class="wf-node">martin-fowler</span><span class="wf-arrow">→</span><span class="wf-node">kent-beck</span></div></div>
+            <div class="workflow-card"><div class="workflow-name">wf-refactoring</div><div class="workflow-flow"><span class="wf-node">dev-chief</span><span class="wf-arrow">→</span><span class="wf-node">martin-fowler</span><span class="wf-arrow">→</span><span class="wf-node">uncle-bob</span><span class="wf-arrow">→</span><span class="wf-node">kent-beck</span></div></div>
+            <div class="workflow-card"><div class="workflow-name">wf-new-feature</div><div class="workflow-flow"><span class="wf-node">dev-chief</span><span class="wf-arrow">→</span><span class="wf-node">dhh</span><span class="wf-arrow">→</span><span class="wf-node">kent-beck</span><span class="wf-arrow">→</span><span class="wf-node">uncle-bob</span><span class="wf-arrow">→</span><span class="wf-node">martin-fowler</span></div></div>
+        </div>
+    </section>
+    <hr>
+
+    <!-- 6. FINANÇAS -->
+    <section class="section" id="s-financas">
+        <h2>6. Finanças Squad</h2>
+        <div class="squad-header">
+            <div class="squad-icon" style="background:linear-gradient(135deg,#ffd93d22,#ff6b6b22);border:1px solid rgba(255,217,61,.2)">💰</div>
+            <div class="squad-meta"><h3>financas/ v1.0.0</h3><div class="squad-path">entry_agent: finance-chief | slashPrefix: finance</div><div class="squad-badges"><span class="badge badge-version">v1.0.0</span></div></div>
+            <div class="squad-stats"><div class="squad-stat"><div class="squad-stat-val">4</div><div class="squad-stat-lbl">Agents</div></div><div class="squad-stat"><div class="squad-stat-val">4</div><div class="squad-stat-lbl">Tasks</div></div><div class="squad-stat"><div class="squad-stat-val">2</div><div class="squad-stat-lbl">Workflows</div></div></div>
+        </div>
+        <div class="agents-grid">
+            <div class="tier-group"><div class="tier-label tier-orch">Orchestrator</div><div class="agents-row"><div class="agent-card tier-orch"><div class="agent-top"><div class="agent-avatar">FC</div><div><div class="agent-name">finance-chief</div><div class="agent-role">Triage, routing, análise</div></div></div></div></div></div>
+            <div class="tier-group"><div class="tier-label tier-t0">Tier 0 — Diagnostic</div><div class="agents-row">
+                <div class="agent-card tier-t0"><div class="agent-top"><div class="agent-avatar">WB</div><div><div class="agent-name">warren-buffett</div><div class="agent-role">Value Investing</div></div></div><div class="agent-frameworks"><span class="framework-tag">Circle of Competence</span><span class="framework-tag">Margin of Safety</span><span class="framework-tag">Economic Moats</span></div><div class="agent-commands"><code>*value</code> <code>*moat</code> <code>*invest</code></div></div>
+            </div></div>
+            <div class="tier-group"><div class="tier-label tier-t1">Tier 1 — Execution</div><div class="agents-row">
+                <div class="agent-card tier-t1"><div class="agent-top"><div class="agent-avatar">RD</div><div><div class="agent-name">ray-dalio</div><div class="agent-role">Principles & Risk</div></div></div><div class="agent-frameworks"><span class="framework-tag">Principles</span><span class="framework-tag">All Weather Portfolio</span><span class="framework-tag">Economic Machine</span></div><div class="agent-commands"><code>*principles</code> <code>*risk</code> <code>*portfolio</code></div></div>
+                <div class="agent-card tier-t1"><div class="agent-top"><div class="agent-avatar">NR</div><div><div class="agent-name">naval</div><div class="agent-role">Wealth Creation</div></div></div><div class="agent-frameworks"><span class="framework-tag">Specific Knowledge</span><span class="framework-tag">Leverage Types (4)</span><span class="framework-tag">Judgment vs Labor</span></div><div class="agent-commands"><code>*leverage</code> <code>*wealth</code> <code>*judgment</code></div></div>
+            </div></div>
+        </div>
+        <h3>Workflows</h3>
+        <div class="workflow-section">
+            <div class="workflow-card"><div class="workflow-name">wf-investment-analysis</div><div class="workflow-flow"><span class="wf-node">finance-chief</span><span class="wf-arrow">→</span><span class="wf-node">warren-buffett</span><span class="wf-arrow">→</span><span class="wf-node">ray-dalio</span><span class="wf-arrow">→</span><span class="wf-node">naval</span></div></div>
+            <div class="workflow-card"><div class="workflow-name">wf-business-evaluation</div><div class="workflow-flow"><span class="wf-node">finance-chief</span><span class="wf-arrow">→</span><span class="wf-node">naval</span><span class="wf-arrow">→</span><span class="wf-node">warren-buffett</span><span class="wf-arrow">→</span><span class="wf-node">ray-dalio</span></div></div>
+        </div>
+    </section>
+    <hr>
+    <!-- 7. PRODUTIVIDADE -->
+    <section class="section" id="s-produtividade">
+        <h2>7. Produtividade Squad</h2>
+        <div class="squad-header">
+            <div class="squad-icon" style="background:linear-gradient(135deg,#ffd93d22,#6bff9e22);border:1px solid rgba(255,217,61,.2)">⚡</div>
+            <div class="squad-meta"><h3>produtividade/ v1.0.0</h3><div class="squad-path">entry_agent: productivity-chief | slashPrefix: productivity</div><div class="squad-badges"><span class="badge badge-version">v1.0.0</span></div></div>
+            <div class="squad-stats"><div class="squad-stat"><div class="squad-stat-val">5</div><div class="squad-stat-lbl">Agents</div></div><div class="squad-stat"><div class="squad-stat-val">5</div><div class="squad-stat-lbl">Tasks</div></div><div class="squad-stat"><div class="squad-stat-val">2</div><div class="squad-stat-lbl">Workflows</div></div></div>
+        </div>
+        <div class="agents-grid">
+            <div class="tier-group"><div class="tier-label tier-orch">Orchestrator</div><div class="agents-row"><div class="agent-card tier-orch"><div class="agent-top"><div class="agent-avatar">PC</div><div><div class="agent-name">productivity-chief</div><div class="agent-role">Triage, routing, produtividade</div></div></div></div></div></div>
+            <div class="tier-group"><div class="tier-label tier-t0">Tier 0 — Diagnostic</div><div class="agents-row">
+                <div class="agent-card tier-t0"><div class="agent-top"><div class="agent-avatar">DA</div><div><div class="agent-name">david-allen</div><div class="agent-role">GTD — Getting Things Done</div></div></div><div class="agent-frameworks"><span class="framework-tag">5 Steps of GTD</span><span class="framework-tag">Weekly Review</span><span class="framework-tag">Mind Like Water</span></div><div class="agent-commands"><code>*gtd</code> <code>*capture</code> <code>*review</code></div></div>
+            </div></div>
+            <div class="tier-group"><div class="tier-label tier-t1">Tier 1 — Execution</div><div class="agents-row">
+                <div class="agent-card tier-t1"><div class="agent-top"><div class="agent-avatar">CN</div><div><div class="agent-name">cal-newport</div><div class="agent-role">Deep Work</div></div></div><div class="agent-frameworks"><span class="framework-tag">Deep Work Protocol</span><span class="framework-tag">Time Blocking</span><span class="framework-tag">Digital Minimalism</span></div><div class="agent-commands"><code>*deep-work</code> <code>*focus</code> <code>*block</code></div></div>
+                <div class="agent-card tier-t1"><div class="agent-top"><div class="agent-avatar">JC</div><div><div class="agent-name">james-clear</div><div class="agent-role">Habits</div></div></div><div class="agent-frameworks"><span class="framework-tag">4 Laws of Change</span><span class="framework-tag">Habit Stacking</span><span class="framework-tag">1% Better</span></div><div class="agent-commands"><code>*habit</code> <code>*stack</code> <code>*identity</code></div></div>
+                <div class="agent-card tier-t1"><div class="agent-top"><div class="agent-avatar">TF</div><div><div class="agent-name">tiago-forte</div><div class="agent-role">Knowledge Management</div></div></div><div class="agent-frameworks"><span class="framework-tag">PARA Method</span><span class="framework-tag">Second Brain (CODE)</span><span class="framework-tag">Progressive Summarization</span></div><div class="agent-commands"><code>*para</code> <code>*capture</code> <code>*organize</code></div></div>
+            </div></div>
+        </div>
+        <h3>Workflows</h3>
+        <div class="workflow-section">
+            <div class="workflow-card"><div class="workflow-name">wf-productivity-setup</div><div class="workflow-flow"><span class="wf-node">productivity-chief</span><span class="wf-arrow">→</span><span class="wf-node">david-allen</span><span class="wf-arrow">→</span><span class="wf-node">cal-newport</span><span class="wf-arrow">→</span><span class="wf-node">tiago-forte</span><span class="wf-arrow">→</span><span class="wf-node">james-clear</span></div></div>
+            <div class="workflow-card"><div class="workflow-name">wf-weekly-reset</div><div class="workflow-flow"><span class="wf-node">productivity-chief</span><span class="wf-arrow">→</span><span class="wf-node">david-allen</span><span class="wf-arrow">→</span><span class="wf-node">cal-newport</span><span class="wf-arrow">→</span><span class="wf-node">james-clear</span></div></div>
+        </div>
+    </section>
+    <hr>
+
+    <!-- 8. IA -->
+    <section class="section" id="s-ia">
+        <h2>8. IA e Automação Squad</h2>
+        <div class="squad-header">
+            <div class="squad-icon" style="background:linear-gradient(135deg,#7c5cfc22,#00d4ff22);border:1px solid rgba(124,92,252,.2)">🤖</div>
+            <div class="squad-meta"><h3>ia-automacao/ v1.0.0</h3><div class="squad-path">entry_agent: ia-chief | slashPrefix: ia</div><div class="squad-badges"><span class="badge badge-version">v1.0.0</span></div></div>
+            <div class="squad-stats"><div class="squad-stat"><div class="squad-stat-val">4</div><div class="squad-stat-lbl">Agents</div></div><div class="squad-stat"><div class="squad-stat-val">4</div><div class="squad-stat-lbl">Tasks</div></div><div class="squad-stat"><div class="squad-stat-val">3</div><div class="squad-stat-lbl">Workflows</div></div></div>
+        </div>
+        <div class="agents-grid">
+            <div class="tier-group"><div class="tier-label tier-orch">Orchestrator</div><div class="agents-row"><div class="agent-card tier-orch"><div class="agent-top"><div class="agent-avatar">IC</div><div><div class="agent-name">ia-chief</div><div class="agent-role">Triage, routing, estratégia IA</div></div></div></div></div></div>
+            <div class="tier-group"><div class="tier-label tier-t0">Tier 0 — Diagnostic</div><div class="agents-row">
+                <div class="agent-card tier-t0"><div class="agent-top"><div class="agent-avatar">AK</div><div><div class="agent-name">andrej-karpathy</div><div class="agent-role">Deep Learning & LLMs</div></div></div><div class="agent-frameworks"><span class="framework-tag">Neural Nets from Scratch</span><span class="framework-tag">LLM Understanding</span><span class="framework-tag">First Principles AI</span></div><div class="agent-commands"><code>*explain</code> <code>*architecture</code> <code>*train</code></div></div>
+            </div></div>
+            <div class="tier-group"><div class="tier-label tier-t1">Tier 1 — Execution</div><div class="agents-row">
+                <div class="agent-card tier-t1"><div class="agent-top"><div class="agent-avatar">AN</div><div><div class="agent-name">alan-nicolas</div><div class="agent-role">IA Prática para Negócios</div></div></div><div class="agent-frameworks"><span class="framework-tag">DNA Mental</span><span class="framework-tag">Sistema IARA</span><span class="framework-tag">Academia Lendária</span></div><div class="agent-commands"><code>*dna</code> <code>*iara</code> <code>*prompt</code></div></div>
+                <div class="agent-card tier-t1"><div class="agent-top"><div class="agent-avatar">JA</div><div><div class="agent-name">jose-amorim</div><div class="agent-role">Nexialismo e IA</div></div></div><div class="agent-frameworks"><span class="framework-tag">Nexialismo</span><span class="framework-tag">Tradução de Complexidade</span><span class="framework-tag">TDAH como Superpoder</span></div><div class="agent-commands"><code>*nexial</code> <code>*translate</code> <code>*connect</code></div></div>
+            </div></div>
+        </div>
+        <h3>Workflows</h3>
+        <div class="workflow-section">
+            <div class="workflow-card"><div class="workflow-name">wf-ai-strategy</div><div class="workflow-flow"><span class="wf-node">ia-chief</span><span class="wf-arrow">→</span><span class="wf-node">andrej-karpathy</span><span class="wf-arrow">→</span><span class="wf-node">alan-nicolas</span><span class="wf-arrow">→</span><span class="wf-node">jose-amorim</span></div></div>
+            <div class="workflow-card"><div class="workflow-name">wf-mind-clone</div><div class="workflow-flow"><span class="wf-node">ia-chief</span><span class="wf-arrow">→</span><span class="wf-node">alan-nicolas</span><span class="wf-arrow">→</span><span class="wf-node">jose-amorim</span><span class="wf-arrow">→</span><span class="wf-node">andrej-karpathy</span></div></div>
+            <div class="workflow-card"><div class="workflow-name">wf-automation-pipeline</div><div class="workflow-flow"><span class="wf-node">ia-chief</span><span class="wf-arrow">→</span><span class="wf-node">andrej-karpathy</span><span class="wf-arrow">→</span><span class="wf-node">alan-nicolas</span><span class="wf-arrow">→</span><span class="wf-node">jose-amorim</span></div></div>
+        </div>
+    </section>
+    <hr>
+
+    <!-- 9. VENDAS -->
+    <section class="section" id="s-vendas">
+        <h2>9. Vendas Squad</h2>
+        <div class="squad-header">
+            <div class="squad-icon" style="background:linear-gradient(135deg,#6bff9e22,#ffd93d22);border:1px solid rgba(107,255,158,.2)">🤝</div>
+            <div class="squad-meta"><h3>vendas/ v1.0.0</h3><div class="squad-path">entry_agent: sales-chief | slashPrefix: sales</div><div class="squad-badges"><span class="badge badge-version">v1.0.0</span></div></div>
+            <div class="squad-stats"><div class="squad-stat"><div class="squad-stat-val">5</div><div class="squad-stat-lbl">Agents</div></div><div class="squad-stat"><div class="squad-stat-val">5</div><div class="squad-stat-lbl">Tasks</div></div><div class="squad-stat"><div class="squad-stat-val">3</div><div class="squad-stat-lbl">Workflows</div></div></div>
+        </div>
+        <div class="agents-grid">
+            <div class="tier-group"><div class="tier-label tier-orch">Orchestrator</div><div class="agents-row"><div class="agent-card tier-orch"><div class="agent-top"><div class="agent-avatar">SC</div><div><div class="agent-name">sales-chief</div><div class="agent-role">Triage, routing, vendas</div></div></div></div></div></div>
+            <div class="tier-group"><div class="tier-label tier-t0">Tier 0 — Diagnostic</div><div class="agents-row">
+                <div class="agent-card tier-t0"><div class="agent-top"><div class="agent-avatar">ZZ</div><div><div class="agent-name">zig-ziglar</div><div class="agent-role">Sales Fundamentals</div></div></div><div class="agent-frameworks"><span class="framework-tag">See You at the Top</span><span class="framework-tag">Secrets of Closing</span><span class="framework-tag">Relationship Selling</span></div><div class="agent-commands"><code>*close</code> <code>*obstacle</code> <code>*rapport</code></div></div>
+            </div></div>
+            <div class="tier-group"><div class="tier-label tier-t1">Tier 1 — Execution</div><div class="agents-row">
+                <div class="agent-card tier-t1"><div class="agent-top"><div class="agent-avatar">GC</div><div><div class="agent-name">grant-cardone</div><div class="agent-role">10X Sales</div></div></div><div class="agent-frameworks"><span class="framework-tag">10X Rule</span><span class="framework-tag">Obsession</span><span class="framework-tag">Follow-up System</span></div><div class="agent-commands"><code>*10x</code> <code>*followup</code> <code>*obsess</code></div></div>
+                <div class="agent-card tier-t1"><div class="agent-top"><div class="agent-avatar">JB</div><div><div class="agent-name">jordan-belfort</div><div class="agent-role">Straight Line Selling</div></div></div><div class="agent-frameworks"><span class="framework-tag">Straight Line Persuasion</span><span class="framework-tag">Tonality System</span><span class="framework-tag">The 3 Tens</span></div><div class="agent-commands"><code>*straight-line</code> <code>*tonality</code> <code>*close</code></div></div>
+                <div class="agent-card tier-t1"><div class="agent-top"><div class="agent-avatar">JB</div><div><div class="agent-name">jeb-blount</div><div class="agent-role">Prospecting</div></div></div><div class="agent-frameworks"><span class="framework-tag">Fanatical Prospecting</span><span class="framework-tag">Sales EQ</span><span class="framework-tag">Objection Handling (RBO)</span></div><div class="agent-commands"><code>*prospect</code> <code>*pipeline</code> <code>*objection</code></div></div>
+            </div></div>
+        </div>
+        <h3>Workflows</h3>
+        <div class="workflow-section">
+            <div class="workflow-card"><div class="workflow-name">wf-full-sales-cycle</div><div class="workflow-flow"><span class="wf-node">sales-chief</span><span class="wf-arrow">→</span><span class="wf-node">jeb-blount</span><span class="wf-arrow">→</span><span class="wf-node">zig-ziglar</span><span class="wf-arrow">→</span><span class="wf-node">jordan-belfort</span><span class="wf-arrow">→</span><span class="wf-node">grant-cardone</span></div></div>
+            <div class="workflow-card"><div class="workflow-name">wf-closing-mastery</div><div class="workflow-flow"><span class="wf-node">sales-chief</span><span class="wf-arrow">→</span><span class="wf-node">zig-ziglar</span><span class="wf-arrow">→</span><span class="wf-node">jordan-belfort</span><span class="wf-arrow">→</span><span class="wf-node">grant-cardone</span></div></div>
+            <div class="workflow-card"><div class="workflow-name">wf-prospecting-system</div><div class="workflow-flow"><span class="wf-node">sales-chief</span><span class="wf-arrow">→</span><span class="wf-node">jeb-blount</span><span class="wf-arrow">→</span><span class="wf-node">grant-cardone</span><span class="wf-arrow">→</span><span class="wf-node">zig-ziglar</span></div></div>
+        </div>
+    </section>
+    <hr>
+    <!-- SQUADS ADICIONAIS -->
+    <section class="section" id="s-adicionais">
+        <h2>Squads Adicionais <span class="section-badge">SKILLS-BASED</span></h2>
+        <p>Existem como skills no <code style="background:rgba(255,255,255,.06);padding:.15em .4em;border-radius:4px;font-family:'JetBrains Mono',monospace;font-size:.85em;color:var(--accent)">.claude/commands/</code></p>
+        <table class="data-table">
+            <thead><tr><th>Squad</th><th>Agents</th><th>Descrição</th></tr></thead>
+            <tbody>
+                <tr><td>MMOS Squad</td><td style="text-align:center">10</td><td style="font-family:'Outfit',sans-serif;text-align:left">Mind Mapping & Orchestration System</td></tr>
+                <tr><td>Ralph</td><td style="text-align:center">1</td><td style="font-family:'Outfit',sans-serif;text-align:left">Agente individual</td></tr>
+                <tr><td>SYNAPSE</td><td style="text-align:center">Engine</td><td style="font-family:'Outfit',sans-serif;text-align:left">Context engine com domains, rules e star-commands</td></tr>
+            </tbody>
+        </table>
+    </section>
+    <hr>
+
+    <!-- MAPA DE TIERS -->
+    <section class="section" id="s-tiers">
+        <h2>Mapa de Tiers</h2>
+        <div class="workflow-card" style="margin-bottom:2rem">
+            <div class="workflow-flow" style="justify-content:center;flex-wrap:wrap;gap:.25rem">
+                <span class="wf-node">Request</span><span class="wf-arrow">→</span>
+                <span class="wf-node" style="border-color:var(--tier-orch);color:var(--tier-orch)">Chief (routing)</span><span class="wf-arrow">→</span>
+                <span class="wf-node" style="border-color:var(--tier-t0);color:var(--tier-t0)">T0 (diagnóstico)</span><span class="wf-arrow">→</span>
+                <span class="wf-node" style="border-color:var(--tier-t1);color:var(--tier-t1)">T1 (execução)</span><span class="wf-arrow">→</span>
+                <span class="wf-node" style="border-color:var(--tier-t2);color:var(--tier-t2)">T2 (validação)</span>
+            </div>
+        </div>
+        <div class="tier-map">
+            <div class="tier-map-row"><div class="tier-map-label" style="color:var(--tier-orch)">Orchestrator</div><div class="tier-map-agents"><span class="tier-map-tag">copy-chief</span><span class="tier-map-tag">marketing-chief</span><span class="tier-map-tag">dev-chief</span><span class="tier-map-tag">finance-chief</span><span class="tier-map-tag">productivity-chief</span><span class="tier-map-tag">ia-chief</span><span class="tier-map-tag">sales-chief</span><span class="tier-map-tag">squad-chief</span><span class="tier-map-tag">master-chief</span></div></div>
+            <div class="tier-map-row"><div class="tier-map-label" style="color:var(--tier-t0)">T0</div><div class="tier-map-agents"><span class="tier-map-tag">eugene-schwartz</span><span class="tier-map-tag">seth-godin</span><span class="tier-map-tag">uncle-bob</span><span class="tier-map-tag">warren-buffett</span><span class="tier-map-tag">david-allen</span><span class="tier-map-tag">andrej-karpathy</span><span class="tier-map-tag">zig-ziglar</span></div></div>
+            <div class="tier-map-row"><div class="tier-map-label" style="color:var(--tier-t1)">T1</div><div class="tier-map-agents"><span class="tier-map-tag">gary-halbert</span><span class="tier-map-tag">david-ogilvy</span><span class="tier-map-tag">stefan-georgi</span><span class="tier-map-tag">gary-vee</span><span class="tier-map-tag">russell-brunson</span><span class="tier-map-tag">neil-patel</span><span class="tier-map-tag">martin-fowler</span><span class="tier-map-tag">kent-beck</span><span class="tier-map-tag">dhh</span><span class="tier-map-tag">ray-dalio</span><span class="tier-map-tag">naval</span><span class="tier-map-tag">cal-newport</span><span class="tier-map-tag">james-clear</span><span class="tier-map-tag">tiago-forte</span><span class="tier-map-tag">alan-nicolas</span><span class="tier-map-tag">jose-amorim</span><span class="tier-map-tag">grant-cardone</span><span class="tier-map-tag">jordan-belfort</span><span class="tier-map-tag">jeb-blount</span></div></div>
+            <div class="tier-map-row"><div class="tier-map-label" style="color:var(--tier-t2)">T2</div><div class="tier-map-agents"><span class="tier-map-tag">claude-hopkins</span><span class="tier-map-tag">ryan-deiss</span></div></div>
+        </div>
+    </section>
+    <hr>
+
+    <!-- RESUMO -->
+    <section class="section" id="s-resumo">
+        <h2>Resumo Final</h2>
+        <div class="summary-grid">
+            <div class="summary-item"><div class="si-val">7</div><div class="si-lbl">Squads de<br>Domínio</div></div>
+            <div class="summary-item"><div class="si-val">2</div><div class="si-lbl">Meta-Squads<br><small style="opacity:.5">creator + master</small></div></div>
+            <div class="summary-item"><div class="si-val">3</div><div class="si-lbl">Skills-Based<br><small style="opacity:.5">MMOS, Ralph, SYNAPSE</small></div></div>
+            <div class="summary-item"><div class="si-val">39</div><div class="si-lbl">Total<br>Agentes</div></div>
+            <div class="summary-item"><div class="si-val">76</div><div class="si-lbl">Total<br>Tasks</div></div>
+            <div class="summary-item"><div class="si-val">28</div><div class="si-lbl">Total<br>Workflows</div></div>
+        </div>
+    </section>
+
+    <footer class="page-footer"><em>AIOS Squad Hierarchy v1.0 | CLI First | Observability Second | UI Third</em></footer>
+</main>
+
+<script>
+const toc=document.getElementById('toc');
+document.querySelectorAll('section[id]').forEach(sec=>{
+    const h=sec.querySelector('h2');
+    if(!h)return;
+    const li=document.createElement('li');
+    const a=document.createElement('a');
+    a.textContent=h.textContent.replace(/[A-Z-]{3,}$/,'').trim();
+    a.href='#'+sec.id;
+    a.addEventListener('click',e=>{e.preventDefault();sec.scrollIntoView({behavior:'smooth',block:'start'});document.querySelectorAll('#toc a').forEach(el=>el.classList.remove('active'));a.classList.add('active')});
+    li.appendChild(a);toc.appendChild(li);
+});
+const obs=new IntersectionObserver(entries=>{entries.forEach(e=>{if(e.isIntersecting){const id=e.target.id;document.querySelectorAll('#toc a').forEach(a=>{a.classList.toggle('active',a.getAttribute('href')==='#'+id)})}})},{rootMargin:'-20% 0px -70% 0px'});
+document.querySelectorAll('section[id]').forEach(s=>obs.observe(s));
+const reveal=new IntersectionObserver(entries=>{entries.forEach(e=>{if(e.isIntersecting)e.target.classList.add('visible')})},{threshold:0.08});
+document.querySelectorAll('.section').forEach(el=>reveal.observe(el));
+</script>
+</body>
+</html>
